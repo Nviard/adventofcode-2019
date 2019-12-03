@@ -10,14 +10,35 @@ Tous les exemples de codes sont executés en leur passant les données par l'ent
 script.py < input.txt
 ```
 
-## Jour 1
+## Jour 1 : The Tyranny of the Rocket Equation
+
+Première partie : calculer la consommation en carburant nécessaire pour faire décoler des fusées en prenant en compte leur poids.
+
+Deuxième partie : le poids du carburant supplémentaire doit également être pris en compte.
 
 ```python
+# mise à jour à venir
 ```
 
-## Jour 2
+## Jour 2 : 1202 Program Alarm
 
-## Jour 3
+Première partie : donner le résultat de l'exécution d'un programme exprimé dans un langage simple.
+
+Deuxième partie : trouver deux paramètres permettant à ce programme de produire une valeur spécifique.
+
+```python
+# mise à jour à venir
+```
+
+## Jour 3 : Crossed Wires
+
+Première partie : à partir de deux chemins partant d'un même point, trouver la plus proche intersection (distance de Manhattan).
+
+Deuxième partie : à partir de deux chemins partant d'un même point, trouver le plus court chemin empruntant ces deux chemins (somme des distances).
+
+```python
+# mise à jour à venir
+```
 
 ## Jour 4
 
