@@ -133,7 +133,17 @@ print(min((sum(map(abs, k)) for k in intersections)))
 print(min((pos[k] + pos2[k] for k in intersections)))
 ```
 
-## Jour 4
+## Jour 4 : Secure Container
+
+Pour ce jour, les données d'entrée ne proviennent pas d'un fichier.
+
+Première partie : compter des nombres composés de chiffres croissants et contenant au moins un chiffre en double.
+
+Deuxième partie : compter des nombres composés de chiffres croissants et contenant et contenant au moins un chiffre en double (mais pas en triple).
+
+```python
+# sera complété à partir de 18h
+```
 
 ## Jour 5
 
