@@ -2,7 +2,7 @@
 
 Lien : [Advent of Code 2019](https://adventofcode.com/2019).
 
-Je mettrai à jour le code au fur et à mesure (en attente du jour 3 pour le moment).
+Je mettrai à jour le code au fur et à mesure (la description le matin et le code après 18h).
 
 Tous les exemples de codes sont executés en leur passant les données par l'entrée standard :
 
@@ -142,7 +142,50 @@ Première partie : compter des nombres composés de chiffres croissants et conte
 Deuxième partie : compter des nombres composés de chiffres croissants et contenant et contenant au moins un chiffre en double (mais pas en triple).
 
 ```python
-# sera complété à partir de 18h
+def valid(number):
+    double = False
+    previous = number % 10
+    number //= 10
+
+    for i in range(5):
+        current = number % 10
+        number //= 10
+        if current > previous:
+            return False
+        if current == previous:
+            double = True
+        previous = current
+
+    return double
+
+
+def valid2(number):
+    doubles = set()
+    bigger = set()
+
+    previous = number % 10
+    number //= 10
+
+    for i in range(5):
+        current = number % 10
+        number //= 10
+        if current > previous:
+            return False
+        if current == previous:
+            if current in doubles:
+                bigger.add(current)
+            else:
+                doubles.add(current)
+        previous = current
+
+    return len(doubles - bigger) > 0
+
+
+start = 367479
+end = 893698
+
+print(sum(map(valid, range(start, end))))
+print(sum(map(valid2, range(start, end))))
 ```
 
 ## Jour 5
