@@ -58,11 +58,11 @@ def execute(code, verb, noun):
     code[2] = noun
 
     while code[current] != 99:
-        current += 4
         if code[current] == 1:
             code[code[current + 3]] = code[code[current + 1]] + code[code[current + 2]]
         elif code[current] == 2:
             code[code[current + 3]] = code[code[current + 1]] * code[code[current + 2]]
+        current += 4
 
     return code
 
@@ -188,7 +188,11 @@ print(sum(map(valid, range(start, end))))
 print(sum(map(valid2, range(start, end))))
 ```
 
-## Jour 5
+## Jour 5 : Sunny with a Chance of Asteroids
+
+Première partie : similaire au jour 2 avec des paramètres donnés par adresse ou par valeur.
+
+Deuxième partie : similaire au jour 2 avec des instructions conditionnelles.
 
 ## Jour 6
 
