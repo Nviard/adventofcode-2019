@@ -194,6 +194,76 @@ Première partie : similaire au jour 2 avec des paramètres donnés par adresse 
 
 Deuxième partie : similaire au jour 2 avec des instructions conditionnelles.
 
+```python
+def parse_args(code, pointer, instr, n, ret=True):
+    args = []
+    for i in range(n):
+        if instr % 10 == 1:
+            args.append(code[pointer + i])
+        else:
+            args.append(code[code[pointer + i]])
+        instr //= 10
+    if ret:
+        args.append(code[pointer + n])
+
+    return args
+
+
+def execute(code, data):
+    current = 0
+    opcode = 0
+    while opcode != 99:
+        instr = code[current]
+
+        opcode = instr % 100
+
+        instr //= 100
+        if opcode == 1:
+            args = parse_args(code, current + 1, instr, 2)
+            code[args[2]] = args[0] + args[1]
+            current += 4
+        elif opcode == 2:
+            args = parse_args(code, current + 1, instr, 2)
+            code[args[2]] = args[0] * args[1]
+            current += 4
+        elif opcode == 3:
+            args = parse_args(code, current + 1, instr, 0)
+            code[args[0]] = data
+            current += 2
+        elif opcode == 4:
+            args = parse_args(code, current + 1, instr, 1, False)
+            print(args[0])
+            current += 2
+        elif opcode == 5:
+            args = parse_args(code, current + 1, instr, 2, False)
+            if args[0] != 0:
+                current = args[1]
+            else:
+                current += 3
+        elif opcode == 6:
+            args = parse_args(code, current + 1, instr, 2, False)
+            if args[0] == 0:
+                current = args[1]
+            else:
+                current += 3
+        elif opcode == 7:
+            args = parse_args(code, current + 1, instr, 2)
+            code[args[2]] = 1 if args[0] < args[1] else 0
+            current += 4
+        elif opcode == 8:
+            args = parse_args(code, current + 1, instr, 2)
+            code[args[2]] = 1 if args[0] == args[1] else 0
+            current += 4
+
+    return code
+
+
+data = input().split(",")
+
+execute(list(map(int, data)), 1)
+execute(list(map(int, data)), 5)
+```
+
 ## Jour 6
 
 ## Jour 7
