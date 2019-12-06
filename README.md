@@ -264,7 +264,11 @@ execute(list(map(int, data)), 1)
 execute(list(map(int, data)), 5)
 ```
 
-## Jour 6
+## Jour 6 : Universal Orbit Map
+
+Première partie : compter le nombre de branches dans un arbre.
+
+Deuxième partie : calculer une distance dans un arbre.
 
 ## Jour 7
 
