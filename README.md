@@ -270,6 +270,36 @@ Première partie : compter le nombre de branches dans un arbre.
 
 Deuxième partie : calculer une distance dans un arbre.
 
+```python3
+from collections import deque
+
+data = {}
+
+try:
+    while True:
+        orbit = input().split(")")
+        if orbit[0] not in data:
+            data[orbit[0]] = []
+        data[orbit[0]].append(orbit[1])
+except EOFError:
+    pass
+
+orbits = {"COM": set()}
+next_objects = deque(["COM"])
+
+while next_objects:
+    current_object = next_objects.pop()
+    if current_object in data:
+        next_orbits = orbits[current_object] | set([current_object])
+        for n in data[current_object]:
+            orbits[n] = next_orbits
+            next_objects.append(n)
+
+
+print(sum(map(len, orbits.values())))
+print(len(orbits["SAN"] ^ orbits["YOU"]))
+```
+
 ## Jour 7
 
 ## Jour 8
