@@ -270,7 +270,7 @@ Première partie : compter le nombre de branches dans un arbre.
 
 Deuxième partie : calculer une distance dans un arbre.
 
-```python3
+```python
 from collections import deque
 
 data = {}
