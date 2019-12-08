@@ -300,9 +300,121 @@ print(sum(map(len, orbits.values())))
 print(len(orbits["SAN"] ^ orbits["YOU"]))
 ```
 
-## Jour 7
+## Jour 7 : Amplification Circuit
 
-## Jour 8
+Partie 1 : lancer plusieurs interpréteurs d'un programme similaire à ceux du jour 5.
+
+Partie 2 : lancer plusieurs fois le programme sur chaque interpréteur.
+
+```python
+import itertools
+from collections import deque
+
+
+class Machine:
+    def __init__(self, phase, code):
+        self._inputs = deque([phase])
+        self._code = code
+        self._pointer = 0
+
+    def parse_args(self, instr, n, ret=True):
+        pointer = self._pointer + 1
+        args = []
+        for i in range(n):
+            if instr % 10 == 1:
+                args.append(self._code[pointer + i])
+            else:
+                args.append(self._code[self._code[pointer + i]])
+            instr //= 10
+        if ret:
+            args.append(self._code[pointer + n])
+
+        return args
+
+    def execute(self, data):
+        self._inputs.append(data)
+        instr = self._code[self._pointer]
+        opcode = instr % 100
+        while opcode != 99:
+            instr //= 100
+            if opcode == 1:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] + args[1]
+                self._pointer += 4
+            elif opcode == 2:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] * args[1]
+                self._pointer += 4
+            elif opcode == 3:
+                args = self.parse_args(instr, 0)
+                self._code[args[0]] = self._inputs.popleft()
+                self._pointer += 2
+            elif opcode == 4:
+                args = self.parse_args(instr, 1, False)
+                self._pointer += 2
+                return args[0]
+            elif opcode == 5:
+                args = self.parse_args(instr, 2, False)
+                if args[0] != 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 6:
+                args = self.parse_args(instr, 2, False)
+                if args[0] == 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 7:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] < args[1] else 0
+                self._pointer += 4
+            elif opcode == 8:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] == args[1] else 0
+                self._pointer += 4
+            else:
+                print("error")
+                return None
+            instr = self._code[self._pointer]
+            opcode = instr % 100
+        return None
+
+
+data = input().split(",")
+
+results = set()
+
+for seq in itertools.permutations(list(range(5)), r=5):
+    init = 0
+    for phase in seq:
+        init = Machine(phase, list(map(int, data))).execute(init)
+    results.add(init)
+
+print(max(results))
+
+results = set()
+
+for seq in itertools.permutations(list(range(5, 10)), r=5):
+    init = 0
+    machines = {phase: Machine(phase, list(map(int, data))) for phase in seq}
+    while True:
+        for phase in seq:
+            init = machines[phase].execute(init)
+        if init is None:
+            results.add(lastval)
+            break
+        else:
+            lastval = init
+
+print(max(results))
+```
+
+## Jour 8 : Space Image Format
+
+Partie 1 : dans une image en noir / blanc / transparent à plusieurs couches, appliquer une opération sur la couche la moins noire.
+
+Partie 2 : afficher l'image.
 
 ## Jour 9
 
