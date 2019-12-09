@@ -2,7 +2,7 @@
 
 Lien : [Advent of Code 2019](https://adventofcode.com/2019).
 
-Je mettrai à jour le code au fur et à mesure (la description le matin et le code après 18h).
+Je mettrai à jour le code au fur et à mesure (la description le matin et le code le lendemain).
 
 Tous les exemples de codes sont executés en leur passant les données par l'entrée standard :
 
@@ -416,7 +416,27 @@ Partie 1 : dans une image en noir / blanc / transparent à plusieurs couches, ap
 
 Partie 2 : afficher l'image.
 
-## Jour 9
+```python
+image = list(map(int, input()))
+WIDTH = 25
+HEIGHT = 6
+layers = [image[i : i + WIDTH * HEIGHT] for i in range(0, len(image), WIDTH * HEIGHT)]
+layer = min(layers, key=lambda x: x.count(0))
+print(layer.count(1) * layer.count(2))
+image = [[None for x in range(WIDTH)] for y in range(HEIGHT)]
+for layer in layers:
+    for i, val in enumerate(layer):
+        if val != 2 and image[i // WIDTH][i % WIDTH] is None:
+            image[i // WIDTH][i % WIDTH] = "O" if val else " "
+for y in range(HEIGHT):
+    print("".join(image[y]))
+```
+
+## Jour 9 : Sensor Boost
+
+Partie 1 : ajout d'adresses relatives à un pointeur aux machines du jour 7.
+
+Partie 2 : pas de code supplémentaire.
 
 ## Jour 10
 
