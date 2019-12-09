@@ -434,7 +434,7 @@ for y in range(HEIGHT):
 
 ## Jour 9 : Sensor Boost
 
-Partie 1 : ajout d'adresses relatives à un pointeur aux machines du jour 7.
+Partie 1 : ajout d'adresses relatives à un pointeur et d'une instruction pour le déplacer aux interpréteurs du jour 7.
 
 Partie 2 : pas de code supplémentaire.
 
