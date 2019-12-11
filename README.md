@@ -546,7 +546,56 @@ Partie 1 : dans un repère, déterminer quel objet peut voir le plus d'autres ob
 
 Partie 2 : dans un repère, détruire successivement les objets les plus proches d'une référence en tournant dans le sens des aiguilles d'une montre.
 
-## Jour 11
+```python
+import itertools
+import math
+
+coords = set()
+
+try:
+    iline = 0
+    while True:
+        line = input()
+        for icol, col in enumerate(line):
+            if col == "#":
+                coords.add((icol, iline,))
+        iline += 1
+except EOFError:
+    pass
+
+targets = {c: dict() for c in coords}
+for couple in itertools.product(coords, repeat=2):
+    dx = couple[1][0] - couple[0][0]
+    dy = couple[0][1] - couple[1][1]
+    angle = math.atan2(dy, dx)
+    dist = math.hypot(dx, dy)
+    if angle not in targets[couple[0]]:
+        targets[couple[0]][angle] = {}
+    targets[couple[0]][angle][dist] = couple[1]
+
+monitoring = max(targets.values(), key=len)
+print(len(monitoring))
+
+angle = math.pi / 2
+destroyed = 0
+last_destroyed = None
+while destroyed < 200:
+    angle = min(monitoring, key=lambda x, ref=angle: (angle - x) % (2 * math.pi))
+    dist = min(monitoring[angle])
+    last_destroyed = monitoring[angle].pop(dist)
+    if not monitoring[angle]:
+        monitoring.pop(angle)
+    destroyed += 1
+    angle -= 0.0001
+
+print(last_destroyed[0] * 100 + last_destroyed[1])
+```
+
+## Jour 11 : Space Police
+
+Partie 1 : utiliser un interpréteur du jour 9 pour déplacer un robot et dessiner dans un plan.
+
+Partie 2 : afficher le dessin effectué par le robot.
 
 ## Jour 12
 
