@@ -597,7 +597,177 @@ Partie 1 : utiliser un interpréteur du jour 9 pour déplacer un robot et dessin
 
 Partie 2 : afficher le dessin effectué par le robot.
 
-## Jour 12
+```python
+import itertools
+from collections import deque
+
+DIRECTIONS = [(0, -1,), (-1, 0,), (0, 1,), (1, 0,)]
+
+
+class Code(list):
+    def __getitem__(self, key):
+        while key >= len(self):
+            self.append(0)
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, item):
+        while key >= len(self):
+            self.append(0)
+        super().__setitem__(key, item)
+
+
+class Machine:
+    def __init__(self, code):
+        self._inputs = deque([])
+        self._code = Code(code)
+        self._pointer = 0
+        self._base = 0
+
+    def parse_args(self, instr, n, ret=True):
+        pointer = self._pointer + 1
+        args = []
+        for i in range(n):
+            if instr % 10 == 1:
+                args.append(self._code[pointer + i])
+            elif instr % 10 == 2:
+                args.append(self._code[self._base + self._code[pointer + i]])
+            else:
+                args.append(self._code[self._code[pointer + i]])
+            instr //= 10
+        if ret:
+            if instr % 10 == 2:
+                args.append(self._base + self._code[pointer + n])
+            else:
+                args.append(self._code[pointer + n])
+
+        return args
+
+    def execute(self, data=None):
+        if data is not None:
+            self._inputs.append(data)
+        instr = self._code[self._pointer]
+        opcode = instr % 100
+        while opcode != 99:
+            instr //= 100
+            if opcode == 1:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] + args[1]
+                self._pointer += 4
+            elif opcode == 2:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] * args[1]
+                self._pointer += 4
+            elif opcode == 3:
+                args = self.parse_args(instr, 0)
+                self._code[args[0]] = self._inputs.popleft()
+                self._pointer += 2
+            elif opcode == 4:
+                args = self.parse_args(instr, 1, False)
+                self._pointer += 2
+                return args[0]
+            elif opcode == 5:
+                args = self.parse_args(instr, 2, False)
+                if args[0] != 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 6:
+                args = self.parse_args(instr, 2, False)
+                if args[0] == 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 7:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] < args[1] else 0
+                self._pointer += 4
+            elif opcode == 8:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] == args[1] else 0
+                self._pointer += 4
+            elif opcode == 9:
+                args = self.parse_args(instr, 1, False)
+                self._base += args[0]
+                self._pointer += 2
+            else:
+                print("error")
+                return None
+            instr = self._code[self._pointer]
+            opcode = instr % 100
+        return None
+
+
+class Robot:
+    def __init__(self, code):
+        self._map = {}
+        self._direction = 0
+        self._position = (
+            0,
+            0,
+        )
+        self._brain = Machine(code)
+
+    def turn(self, direction):
+        if direction == 1:
+            self._direction -= 1
+        else:
+            self._direction += 1
+        self._direction %= len(DIRECTIONS)
+
+    def paint(self, color):
+        self._map[self._position] = color
+
+    def step(self):
+        self._position = (
+            self._position[0] + DIRECTIONS[self._direction][0],
+            self._position[1] + DIRECTIONS[self._direction][1],
+        )
+
+    def execute(self):
+        self.paint(1)
+        while True:
+            color = self._brain.execute(self._map.get(self._position, 0))
+            if color is None:
+                return self._map
+            self.paint(color)
+            direction = self._brain.execute()
+            if direction is None:
+                return self._map
+            self.turn(direction)
+            self.step()
+
+
+data = input().split(",")
+print(len(Robot(list(map(int, data))).execute()))
+
+coords = Robot(list(map(int, data))).execute()
+maxx = max(coords, key=lambda x: x[0])[0]
+maxy = max(coords, key=lambda x: x[1])[1]
+minx = min(coords, key=lambda x: x[0])[0]
+miny = min(coords, key=lambda x: x[1])[1]
+height = maxy - miny + 1
+width = maxx - minx + 1
+
+print(height)
+print(width)
+image = [[" " for c in range(width)] for r in range(height)]
+for k in coords:
+    if coords[k] == 1:
+        try:
+            image[k[1]][k[0]] = "O"
+        except:
+            print(k[1])
+            print(k[0])
+
+for y in range(height):
+    print("".join(image[y]))
+```
+
+## Jour 12 : The N-Body Problem
+
+Partie 1 : calculer les déplacements d'objets dans un espace 3D en appliquant des règlees de gravitation.
+
+Partie 2 : déterminer la période des positions de ces objets.
 
 ## Jour 13
 
