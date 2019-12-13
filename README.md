@@ -769,7 +769,64 @@ Partie 1 : calculer les déplacements d'objets dans un espace 3D en appliquant d
 
 Partie 2 : déterminer la période des positions de ces objets.
 
-## Jour 13
+```python
+import re
+import itertools
+import functools
+import math
+
+system = []
+
+regex = re.compile("[a-z= ><]*")
+try:
+    while True:
+        system.append([list(map(int, regex.sub("", input()).split(","))), [0, 0, 0]])
+except EOFError:
+    pass
+
+periods = {}
+pos = [
+    tuple(itertools.chain(map(lambda x: (x[0][i], x[1][i]), system))) for i in range(3)
+]
+current = 0
+
+while len(periods) < 3 or current < 1000:
+    current += 1
+    for moon, moon2 in itertools.combinations(system, r=2):
+        for coord in range(3):
+            if moon[0][coord] > moon2[0][coord]:
+                moon[1][coord] -= 1
+                moon2[1][coord] += 1
+            elif moon[0][coord] < moon2[0][coord]:
+                moon[1][coord] += 1
+                moon2[1][coord] -= 1
+    for moon in system:
+        for i, v in enumerate(moon[1]):
+            moon[0][i] += v
+    for i in range(3):
+        if i not in periods:
+            if (
+                tuple(itertools.chain(map(lambda x: (x[0][i], x[1][i]), system)))
+                == pos[i]
+            ):
+                periods[i] = current
+    if current == 1000:
+        print(
+            sum(
+                map(
+                    lambda moon: sum(map(abs, moon[0])) * sum(map(abs, moon[1])), system
+                )
+            )
+        )
+
+print(functools.reduce(lambda a, b: a * b // math.gcd(a, b), periods.values()))
+```
+
+## Jour 13 : Care Package
+
+Partie 1 : utiliser un interpréteur du jour 9 pour dessiner l'écran d'un jeu d'arcade.
+
+Partie 2 : déterminer les entrées nécessaires pour gagner la partie.
 
 ## Jour 14
 
