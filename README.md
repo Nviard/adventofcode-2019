@@ -828,7 +828,7 @@ Partie 1 : utiliser un interpréteur du jour 9 pour dessiner l'écran d'un jeu d
 
 Partie 2 : déterminer les entrées nécessaires pour gagner la partie.
 
-```
+```python
 import itertools
 from collections import deque
 
@@ -968,7 +968,7 @@ Partie 1 : à partir d'une liste de réaction chimiques, calculer le nombre de r
 
 Partie 2 : calculer quelle est la quantité maximale de produit final pouvant être obtenue à partir d'une quantité donnée de réactif de base.
 
-```
+```python
 import re
 import math
 
