@@ -968,7 +968,72 @@ Partie 1 : à partir d'une liste de réaction chimiques, calculer le nombre de r
 
 Partie 2 : calculer quelle est la quantité maximale de produit final pouvant être obtenue à partir d'une quantité donnée de réactif de base.
 
-## Jour 15
+```
+import re
+import math
+
+reactions = {}
+
+regex = re.compile("[0-9]+ [A-Z]+")
+try:
+    while True:
+        *input_chemicals, output_chemical = regex.findall(input())
+        output_quantity, output_name = output_chemical.split()
+        components = []
+        for chem in input_chemicals:
+            chem = chem.split()
+            components.append((int(chem[0]), chem[1]))
+        reactions[output_name] = (int(output_quantity), components)
+
+except EOFError:
+    pass
+
+
+def make_fuel(n):
+    need = {"ORE": 0, "FUEL": n}
+    made = {}
+
+    while len(need) > 1:
+        new_need = {"ORE": need.pop("ORE")}
+        for key, val in need.items():
+            if key not in made:
+                made[key] = 0
+            made[key] -= val
+            val = -made[key]
+            if val > 0:
+                quantity, components = reactions[key]
+                factor = math.ceil(val / quantity)
+                made[key] += quantity * factor
+                for input_quantity, input_name in components:
+                    if input_name not in new_need:
+                        new_need[input_name] = 0
+                    new_need[input_name] += input_quantity * factor
+        need = new_need
+    return need["ORE"]
+
+
+print(make_fuel(1))
+
+res = 0
+fuel = 2
+while res <= 1000000000000:
+    fuel *= 2
+    res = make_fuel(fuel)
+fuel //= 2
+base = fuel // 2
+while base > 0:
+    if make_fuel(fuel + base) <= 1000000000000:
+        fuel += base
+    base //= 2
+
+print(fuel)
+```
+
+## Jour 15 : Oxygen System
+
+Partie 1 : déplacer un robot sur une carte avec un interpréteur du jour 9 pour déterminer le plus court chemin permettant d'atteindre un point.
+
+Partie 2 : déplacer un robot sur une carte pour trouver la plus longue distance depuis un point donné.
 
 ## Jour 16
 
