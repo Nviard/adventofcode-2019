@@ -1035,7 +1035,181 @@ Partie 1 : déplacer un robot sur une carte avec un interpréteur du jour 9 pour
 
 Partie 2 : déplacer un robot sur une carte pour trouver la plus longue distance depuis un point donné.
 
-## Jour 16
+```python
+import itertools
+from collections import deque
+
+
+class Code(list):
+    def __getitem__(self, key):
+        while key >= len(self):
+            self.append(0)
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, item):
+        while key >= len(self):
+            self.append(0)
+        super().__setitem__(key, item)
+
+
+class Machine:
+    def __init__(self, code):
+        self._inputs = deque([])
+        self._code = Code(code)
+        self._pointer = 0
+        self._base = 0
+
+    def parse_args(self, instr, n, ret=True):
+        pointer = self._pointer + 1
+        args = []
+        for i in range(n):
+            if instr % 10 == 1:
+                args.append(self._code[pointer + i])
+            elif instr % 10 == 2:
+                args.append(self._code[self._base + self._code[pointer + i]])
+            else:
+                args.append(self._code[self._code[pointer + i]])
+            instr //= 10
+        if ret:
+            if instr % 10 == 2:
+                args.append(self._base + self._code[pointer + n])
+            else:
+                args.append(self._code[pointer + n])
+
+        return args
+
+    def execute(self, data=None):
+        if data is not None:
+            self._inputs.append(data)
+        instr = self._code[self._pointer]
+        opcode = instr % 100
+        while opcode != 99:
+            instr //= 100
+            if opcode == 1:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] + args[1]
+                self._pointer += 4
+            elif opcode == 2:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] * args[1]
+                self._pointer += 4
+            elif opcode == 3:
+                args = self.parse_args(instr, 0)
+                self._code[args[0]] = self._inputs.popleft()
+                self._pointer += 2
+            elif opcode == 4:
+                args = self.parse_args(instr, 1, False)
+                self._pointer += 2
+                return args[0]
+            elif opcode == 5:
+                args = self.parse_args(instr, 2, False)
+                if args[0] != 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 6:
+                args = self.parse_args(instr, 2, False)
+                if args[0] == 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 7:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] < args[1] else 0
+                self._pointer += 4
+            elif opcode == 8:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] == args[1] else 0
+                self._pointer += 4
+            elif opcode == 9:
+                args = self.parse_args(instr, 1, False)
+                self._base += args[0]
+                self._pointer += 2
+            else:
+                print("error")
+                return None
+            instr = self._code[self._pointer]
+            opcode = instr % 100
+        return None
+
+
+data = input().split(",")
+robot = Machine(list(map(int, data)))
+
+DIRECTIONS = {1: (0, 1), 2: (0, -1), 3: (-1, 0), 4: (1, 0)}
+OPPOSITES = {1: 2, 2: 1, 3: 4, 4: 3}
+
+
+def explore():
+    global current
+    global current_path
+    global current_pos
+    global max_path_len
+    current_len = len(current_path)
+    if current_len + 1 not in candidates:
+        candidates[current_len + 1] = {}
+    for direction, (dx, dy) in DIRECTIONS.items():
+        candidate = (current_pos[0] + dx, current_pos[1] + dy)
+        if candidate not in visited:
+            candidates[current_len + 1][candidate] = [*current_path, direction]
+    try:
+        nearest_candidates = next(iter(candidates))
+        while not candidates[nearest_candidates]:
+            candidates.pop(nearest_candidates)
+            nearest_candidates = next(iter(candidates))
+    except StopIteration:
+        return False
+    next_candidate_pos = next(iter(candidates[nearest_candidates]))
+    next_candidate_path = candidates[nearest_candidates].pop(next_candidate_pos)
+    i = 0
+    while i < len(current_path) and current_path[i] == next_candidate_path[i]:
+        i += 1
+    moves = [*[OPPOSITES[d] for d in current_path[i:][::-1]], *next_candidate_path[i:]]
+    for move in moves:
+        current = robot.execute(move)
+    current_pos = next_candidate_pos
+    current_path = next_candidate_path
+    visited.add(next_candidate_pos)
+    if current == 0:
+        move = OPPOSITES[moves[-1]]
+        dx, dy = DIRECTIONS[move]
+        current = 1
+        current_path = current_path[:-1]
+        current_pos = (current_pos[0] + dx, current_pos[1] + dy)
+    max_path_len = max(max_path_len, len(current_path))
+    return True
+
+
+current = 1
+visited = set()
+visited.add((0, 0))
+current_pos = (0, 0)
+candidates = {}
+max_path_len = 0
+current_path = []
+while current != 2:
+    explore()
+
+print(max_path_len)
+
+current = 2
+visited = set()
+visited.add(current_pos)
+candidates = {}
+max_path_len = 0
+current_path = []
+while explore():
+    pass
+
+
+print(max_path_len)
+```
+
+## Jour 16 : Flawed Frequency Transmission
+
+Partie 1 : appliquer des coefficients glissants à une liste de valeurs.
+
+Partie 2 : appliquer des coefficients glissants à une grande liste de valeurs (... ou trouver une astuce plus rapide).
 
 ## Jour 17
 
