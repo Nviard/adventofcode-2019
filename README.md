@@ -1211,7 +1211,39 @@ Partie 1 : appliquer des coefficients glissants à une liste de valeurs.
 
 Partie 2 : appliquer des coefficients glissants à une grande liste de valeurs (... ou trouver une astuce plus rapide).
 
-## Jour 17
+```python
+def get_slice_sum(numbers, pos):
+    index = pos
+    while index < len(numbers):
+        yield sum(numbers[index : index + pos + 1]) - sum(
+            numbers[index + 2 * (pos + 1) : index + 3 * (pos + 1)]
+        )
+        index += 4 * (pos + 1)
+
+
+data = input()
+
+numbers = list(map(int, data))
+for k in range(1):
+    for j in range(len(numbers)):
+        numbers[j] = abs(sum(get_slice_sum(numbers, j))) % 10
+print("".join([str(n) for n in numbers[:8]]))
+
+
+data *= 10000
+offset = int(data[:7])
+numbers = list(map(int, data[offset:]))
+for k in range(100):
+    for j in range(len(numbers) - 2, -1, -1):
+        numbers[j] = (numbers[j + 1] + numbers[j]) % 10
+print("".join([str(n) for n in numbers[:8]]))
+```
+
+## Jour 17 : Set and Forget
+
+Partie 1 : détecter des intersections sur une carte dessinée par un interpréteur du jour 9.
+
+Partie 2 : fournirun programme à un robot se déplaçant sur la carte de la partie précédente.
 
 ## Jour 18
 
