@@ -1243,11 +1243,323 @@ print("".join([str(n) for n in numbers[:8]]))
 
 Partie 1 : détecter des intersections sur une carte dessinée par un interpréteur du jour 9.
 
-Partie 2 : fournirun programme à un robot se déplaçant sur la carte de la partie précédente.
+Partie 2 : fournir un programme à un robot se déplaçant sur la carte de la partie précédente.
 
-## Jour 18
+```python
+from collections import deque
 
-## Jour 19
+
+class Code(list):
+    def __getitem__(self, key):
+        while key >= len(self):
+            self.append(0)
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, item):
+        while key >= len(self):
+            self.append(0)
+        super().__setitem__(key, item)
+
+
+class Machine:
+    def __init__(self, code):
+        self._inputs = deque([])
+        self._code = Code(code)
+        self._pointer = 0
+        self._base = 0
+
+    def parse_args(self, instr, n, ret=True):
+        pointer = self._pointer + 1
+        args = []
+        for i in range(n):
+            if instr % 10 == 1:
+                args.append(self._code[pointer + i])
+            elif instr % 10 == 2:
+                args.append(self._code[self._base + self._code[pointer + i]])
+            else:
+                args.append(self._code[self._code[pointer + i]])
+            instr //= 10
+        if ret:
+            if instr % 10 == 2:
+                args.append(self._base + self._code[pointer + n])
+            else:
+                args.append(self._code[pointer + n])
+
+        return args
+
+    def execute(self, data=None):
+        if data is not None:
+            self._inputs.extend(data)
+        instr = self._code[self._pointer]
+        opcode = instr % 100
+        while opcode != 99:
+            instr //= 100
+            if opcode == 1:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] + args[1]
+                self._pointer += 4
+            elif opcode == 2:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] * args[1]
+                self._pointer += 4
+            elif opcode == 3:
+                args = self.parse_args(instr, 0)
+                self._code[args[0]] = self._inputs.popleft()
+                self._pointer += 2
+            elif opcode == 4:
+                args = self.parse_args(instr, 1, False)
+                self._pointer += 2
+                return args[0]
+            elif opcode == 5:
+                args = self.parse_args(instr, 2, False)
+                if args[0] != 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 6:
+                args = self.parse_args(instr, 2, False)
+                if args[0] == 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 7:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] < args[1] else 0
+                self._pointer += 4
+            elif opcode == 8:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] == args[1] else 0
+                self._pointer += 4
+            elif opcode == 9:
+                args = self.parse_args(instr, 1, False)
+                self._base += args[0]
+                self._pointer += 2
+            else:
+                print("error")
+                return None
+            instr = self._code[self._pointer]
+            opcode = instr % 100
+        return None
+
+
+data = input().split(",")
+data[0] = 2
+robot = Machine(list(map(int, data)))
+
+scaffolds = set()
+
+x = 0
+y = 0
+string = ""
+while True:
+    try:
+        output = robot.execute()
+    except IndexError:
+        break
+    if output == 10:
+        y += 1
+        x = 0
+        print(string)
+        string = ""
+    elif output is None:
+        break
+    else:
+        string += chr(output)
+        if output == 35:
+            scaffolds.add((x, y))
+        x += 1
+
+print(
+    sum(
+        map(
+            # list(
+            lambda s: s[0] * s[1],
+            filter(
+                lambda s: ((s[0] + 1, s[1]) in scaffolds)
+                and ((s[0] - 1, s[1]) in scaffolds)
+                and ((s[0], s[1] + 1) in scaffolds)
+                and ((s[0], s[1] - 1) in scaffolds),
+                scaffolds,
+            ),
+        )
+    )
+)
+
+codes = [
+    "A,B,A,B,C,C,B,A,B,C\n",
+    "L,8,R,12,R,12,R,10\n",
+    "R,10,R,12,R,10\n",
+    "L,10,R,10,L,6\n",
+    "n\n",
+]
+codes = (ord(c) for c in "".join(codes))
+
+output = robot.execute(codes)
+while output is not None:
+    if output == 10:
+        y += 1
+        print(string)
+        string = ""
+    elif output > 127:
+        print(output)
+    else:
+        string += chr(output)
+    output = robot.execute()
+```
+
+## Jour 18 : Many-Worlds Interpretation
+
+Partie 1 : déterminer le plus court chemin permettant de ramasser des clés et d'ouvrir des portes.
+
+Partie 2 : déterminer le plus court chemin permettant de ramasser des clés et d'ouvrir des portes sur 4 tableaux séparés.
+
+```python
+from collections import deque
+
+DIRECTIONS = ((1, 0), (-1, 0), (0, 1), (0, -1))
+
+
+def solve():
+    paths = {}
+    paths["@"] = {}
+    symbols_grouped = []
+
+    for a in entrances:
+        symbols_grouped.append({})
+        visited = set()
+        candidates = deque([(*a, 0, set())])
+        while len(candidates) > 0:
+            current_r, current_c, current_dist, current_doors = candidates.popleft()
+            visited.add((current_r, current_c))
+            char = data[current_r][current_c]
+            if char == "#":
+                continue
+            elif "A" <= char <= "Z":
+                current_doors = current_doors | set(char.lower())
+            elif "a" <= char <= "z":
+                paths["@"][char] = (current_dist, current_doors)
+                symbols_grouped[-1][char] = coords[char]
+            for d_r, d_c in DIRECTIONS:
+                if (current_r + d_r, current_c + d_c) not in visited:
+                    candidates.append(
+                        (
+                            current_r + d_r,
+                            current_c + d_c,
+                            current_dist + 1,
+                            current_doors,
+                        )
+                    )
+
+    for symbols in symbols_grouped:
+        for a in symbols:
+            paths[a] = {k: v[a] for k, v in paths.items() if a in v}
+            to_find = set(symbols) - set(paths)
+            visited = set()
+            candidates = deque([(*symbols[a], 0, set())])
+            while len(to_find) > 0:
+                current_r, current_c, current_dist, current_doors = candidates.popleft()
+                visited.add((current_r, current_c))
+                char = data[current_r][current_c]
+                if char == "#":
+                    continue
+                elif "A" <= char <= "Z":
+                    current_doors = current_doors | set(char.lower())
+                elif char in to_find:
+                    to_find -= set(char)
+                    paths[a][char] = (current_dist, current_doors)
+                for d_r, d_c in DIRECTIONS:
+                    if (current_r + d_r, current_c + d_c) not in visited:
+                        candidates.append(
+                            (
+                                current_r + d_r,
+                                current_c + d_c,
+                                current_dist + 1,
+                                current_doors,
+                            )
+                        )
+
+    symbols = {}
+    for i_group, group in enumerate(symbols_grouped):
+        for s in group:
+            symbols[s] = i_group
+
+    current = ("@", 0, ("", "@" * len(symbols_grouped)))
+    candidates = {0: deque([current])}
+    visited = set()
+
+    def get_candidates():
+        for dest in set("".join(("".join(paths[x]) for x in current[2][1]))) - set(
+            current[0]
+        ):
+            path = current[0] + dest
+            if path not in visited:
+                pos = symbols[dest]
+                dest_val = paths[current[2][1][pos]][dest]
+                if not dest_val[1] - set(current[0]):
+                    yield (
+                        path,
+                        current[1] + dest_val[0],
+                        (
+                            "".join(sorted(current[2][0] + current[2][1][pos])),
+                            "".join(
+                                (current[2][1][:pos], dest, current[2][1][pos + 1 :])
+                            ),
+                        ),
+                    )
+
+    while len(current[0]) < len(paths):
+        if current[2] not in visited:
+            visited.add(current[2])
+            for c in get_candidates():
+                if c[1] not in candidates:
+                    candidates[c[1]] = deque([])
+                candidates[c[1]].append(c)
+
+        next_candidates = candidates[min(candidates)]
+        while len(next_candidates) == 0:
+            candidates.pop(min(candidates))
+            next_candidates = candidates[min(candidates)]
+
+        current = next_candidates.popleft()
+
+    return current[1]
+
+
+data = []
+
+try:
+    while True:
+        data.append(input())
+except EOFError:
+    pass
+
+entrances = []
+coords = {}
+
+for r, d in enumerate(data):
+    for c, x in enumerate(d):
+        if x == "@":
+            entrances.append((r, c))
+        elif "a" <= x <= "z":
+            coords[x] = (r, c)
+
+print(solve())
+
+r, c = entrances[0]
+data[r - 1] = "".join((data[r - 1][: c - 1], "@#@", data[r - 1][c + 2 :]))
+data[r] = "".join((data[r][: c - 1], "###", data[r][c + 2 :]))
+data[r + 1] = "".join((data[r + 1][: c - 1], "@#@", data[r + 1][c + 2 :]))
+
+entrances = [(r + 1, c + 1), (r + 1, c - 1), (r - 1, c - 1), (r - 1, c + 1)]
+
+print(solve())
+```
+
+## Jour 19 : Tractor Beam
+
+Partie 1 : utiliser un interpréteur du jour 9 pour déterminer combien de points dans un rectangle sont dans un faisceau lumineux.
+
+Partie 2 : trouver le carré de 100000 points le plus proche de la source du faisceau.
 
 ## Jour 20
 
