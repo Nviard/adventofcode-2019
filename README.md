@@ -1570,3 +1570,15 @@ Partie 2 : trouver le carré de 100000 points le plus proche de la source du fai
 ## Jour 23
 
 ## Jour 24
+
+## Comment perdre du temps :)
+
+### Jour 16 :
+
+- Chercher à calculer l'ensemble du tableau pour la partie 2, alors que les valeurs pouvaient être calculées depuis la fin du tableau pour sa seconde moitié.
+
+### Jour 18 :
+
+- Stocker les différents candidats pour un algorithme de Dijkstra dans une liste non triée et appeler min(liste) pour sélectionner le prochain point à évaluer, bien plus lent que de les stocker dans une autre structure.
+- Considérer que deux chemins passant par les mêmes points amènent au même état, quel que soit l'ordre des points, sans prendre en compte la position du dernier point visité.
+
