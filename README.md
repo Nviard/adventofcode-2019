@@ -1708,5 +1708,8 @@ Partie 2 : trouver le plus court chemin dans un labyrinthe composé de plusieurs
 
 ### Jour 19 :
 
-- Oublier qu'une visualisation est possible en réutilisant le code de la partie 1.
+- Ne pas réutiliser le code de la partie 1 pour une visualisation.
 
+### Jour 20 :
+
+- Chercher à appliquer Dijkstra et s'emmêler les pinceaux dans les coûts des téléportations. (J'ai au final fait un A* avec une heuristique basée sur une estimation du coût minimal du passage à un étage inférieur de 2 fois la distance de Manhattan la plus courte entre un téléporteur interne et externe).
