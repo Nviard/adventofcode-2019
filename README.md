@@ -1561,7 +1561,131 @@ Partie 1 : utiliser un interpréteur du jour 9 pour déterminer combien de point
 
 Partie 2 : trouver le carré de 100000 points le plus proche de la source du faisceau.
 
-## Jour 20
+```python
+from collections import deque
+
+
+class Code(list):
+    def __getitem__(self, key):
+        while key >= len(self):
+            self.append(0)
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, item):
+        while key >= len(self):
+            self.append(0)
+        super().__setitem__(key, item)
+
+
+class Machine:
+    def __init__(self, code):
+        self._inputs = deque([])
+        self._code = Code(code)
+        self._pointer = 0
+        self._base = 0
+
+    def parse_args(self, instr, n, ret=True):
+        pointer = self._pointer + 1
+        args = []
+        for i in range(n):
+            if instr % 10 == 1:
+                args.append(self._code[pointer + i])
+            elif instr % 10 == 2:
+                args.append(self._code[self._base + self._code[pointer + i]])
+            else:
+                args.append(self._code[self._code[pointer + i]])
+            instr //= 10
+        if ret:
+            if instr % 10 == 2:
+                args.append(self._base + self._code[pointer + n])
+            else:
+                args.append(self._code[pointer + n])
+
+        return args
+
+    def execute(self, data=None):
+        if data is not None:
+            self._inputs.extend(data)
+        instr = self._code[self._pointer]
+        opcode = instr % 100
+        while opcode != 99:
+            instr //= 100
+            if opcode == 1:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] + args[1]
+                self._pointer += 4
+            elif opcode == 2:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] * args[1]
+                self._pointer += 4
+            elif opcode == 3:
+                args = self.parse_args(instr, 0)
+                self._code[args[0]] = self._inputs.popleft()
+                self._pointer += 2
+            elif opcode == 4:
+                args = self.parse_args(instr, 1, False)
+                self._pointer += 2
+                return args[0]
+            elif opcode == 5:
+                args = self.parse_args(instr, 2, False)
+                if args[0] != 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 6:
+                args = self.parse_args(instr, 2, False)
+                if args[0] == 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 7:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] < args[1] else 0
+                self._pointer += 4
+            elif opcode == 8:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] == args[1] else 0
+                self._pointer += 4
+            elif opcode == 9:
+                args = self.parse_args(instr, 1, False)
+                self._base += args[0]
+                self._pointer += 2
+            else:
+                print("error")
+                return None
+            instr = self._code[self._pointer]
+            opcode = instr % 100
+        return None
+
+
+data = input().split(",")
+
+
+def test(coords):
+    for c in coords:
+        robot = Machine(list(map(int, data)))
+        yield robot.execute(c)
+
+
+print(sum((sum(test(((x, y) for x in range(50)))) for y in range(50))))
+
+x = 0
+y = 0
+
+while min(test(((x, y), (x + 99, y), (x, y + 99), (x + 99, y + 99)))) == 0:
+    while sum(test(((x, y + 99),))) == 0:
+        x += 1
+    while sum(test(((x + 99, y),))) == 0:
+        y += 1
+
+print(x * 10000 + y)
+```
+
+## Jour 20 : Donut Maze
+
+Partie 1 : trouver le plus court chemin dans un labyrinthe avec des téléporteurs.
+
+Partie 2 : trouver le plus court chemin dans un labyrinthe composé de plusieurs étages identiques.
 
 ## Jour 21
 
@@ -1581,4 +1705,8 @@ Partie 2 : trouver le carré de 100000 points le plus proche de la source du fai
 
 - Stocker les différents candidats pour un algorithme de Dijkstra dans une liste non triée et appeler min(liste) pour sélectionner le prochain point à évaluer, bien plus lent que de les stocker dans une autre structure.
 - Considérer que deux chemins passant par les mêmes points amènent au même état, quel que soit l'ordre des points, sans prendre en compte la position du dernier point visité.
+
+### Jour 19 :
+
+- Oublier qu'une visualisation est possible en réutilisant le code de la partie 1.
 
