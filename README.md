@@ -1687,7 +1687,139 @@ Partie 1 : trouver le plus court chemin dans un labyrinthe avec des téléporteu
 
 Partie 2 : trouver le plus court chemin dans un labyrinthe composé de plusieurs étages identiques.
 
-## Jour 21
+```
+from collections import deque
+from itertools import product
+
+DIRECTIONS = ((1, 0), (-1, 0), (0, 1), (0, -1))
+
+
+def solve(r=False):
+    candidates = {}
+    visited = set()
+    current = ((*entrance, 0),) if r else (entrance,)
+    h = lambda x: len(x) + min_dist * x[-1][-1] if r else len
+
+    def get_candidates():
+        for r_d, c_d in DIRECTIONS:
+            dest = (
+                (current[-1][0] + r_d, current[-1][1] + c_d, current[-1][2])
+                if r
+                else (current[-1][0] + r_d, current[-1][1] + c_d)
+            )
+            if dest not in visited and dest[:2] in passages:
+                yield (*current, dest)
+            if current[-1][:2] in letters_inside:
+                dest = next(
+                    filter(
+                        lambda x: letters_outside[x] == letters_inside[current[-1][:2]],
+                        letters_outside,
+                    )
+                )
+                if dest not in visited:
+                    level = current[-1][-1] + 1
+                    yield (*current, (*dest, level)) if r else (*current, dest)
+            elif current[-1][:2] in letters_outside:
+                dest = next(
+                    filter(
+                        lambda x: letters_inside[x] == letters_outside[current[-1][:2]],
+                        letters_inside,
+                    )
+                )
+                if dest not in visited:
+                    level = current[-1][-1] - 1
+                    if level >= 0:
+                        yield (*current, (*dest, level)) if r else (*current, dest)
+
+    while (r and current[-1][2] != 0) or current[-1][:2] != exit:
+        if current[-1] not in visited:
+            visited.add(current[-1])
+            for c in get_candidates():
+                if h(c) not in candidates:
+                    candidates[h(c)] = deque([])
+                candidates[h(c)].append(c)
+        next_candidates = candidates[min(candidates)]
+        while len(next_candidates) == 0:
+            candidates.pop(min(candidates))
+            next_candidates = candidates[min(candidates)]
+
+        current = next_candidates.popleft()
+
+    return current
+
+
+data = []
+
+try:
+    while True:
+        data.append(input())
+except EOFError:
+    pass
+
+letters_inside = {}
+letters_outside = {}
+passages = set()
+
+for r, d in enumerate(data):
+    for c, x in enumerate(d):
+        if x == ".":
+            passages.add((r, c))
+        elif "A" <= x <= "Z":
+            for r_d, c_d in DIRECTIONS:
+                if (
+                    (r + r_d) >= 0
+                    and (c + c_d) >= 0
+                    and (r + r_d) < len(data)
+                    and (c + c_d) < len(data[0])
+                ):
+                    x_d = data[r + r_d][c + c_d]
+                    if "A" <= x_d <= "Z":
+                        if (
+                            (r - r_d) < 0
+                            or (c - c_d) < 0
+                            or (r - r_d) >= len(data)
+                            or (c - c_d) >= len(data[0])
+                        ):
+                            letters_outside[(r + 2 * r_d, c + 2 * c_d)] = tuple(
+                                sorted((x, x_d))
+                            )
+                        elif (
+                            (r + 2 * r_d) < 0
+                            or (c + 2 * c_d) < 0
+                            or (r + 2 * r_d) >= len(data)
+                            or (c + 2 * c_d) >= len(data[0])
+                        ):
+                            letters_outside[(r - r_d, c - c_d)] = tuple(
+                                sorted((x, x_d))
+                            )
+                        elif data[r - r_d][c - c_d] == ".":
+                            letters_inside[(r - r_d, c - c_d)] = tuple(sorted((x, x_d)))
+                        else:
+                            letters_inside[(r + 2 * r_d, c + 2 * c_d)] = tuple(
+                                sorted((x, x_d))
+                            )
+                        break
+
+entrance = next(filter(lambda x: letters_outside[x] == ("A", "A"), letters_outside))
+exit = next(filter(lambda x: letters_outside[x] == ("Z", "Z"), letters_outside))
+letters_outside.pop(exit)
+letters_outside.pop(entrance)
+min_dist = (
+    min(
+        abs(a[0] - b[0]) + abs(a[1] - b[1])
+        for (a, b) in product(letters_outside, letters_inside)
+    )
+    * 2
+)
+passages.add(exit)
+print(len(solve()) - 1)
+print(len(solve(True)) - 1)
+```
+## Jour 21 : Springdroid Adventure
+
+Partie 1 : commander un robot à l'aide d'un interpréteur du jour 9 pour qu'il évite des trous avec des sauts de 4 et une vision de 4.
+
+Partie 2 : commander un robot à l'aide d'un interpréteur du jour 9 pour qu'il évite des trous avec des sauts de 4 et une vision de 8.
 
 ## Jour 22
 
@@ -1713,3 +1845,7 @@ Partie 2 : trouver le plus court chemin dans un labyrinthe composé de plusieurs
 ### Jour 20 :
 
 - Chercher à appliquer Dijkstra et s'emmêler les pinceaux dans les coûts des téléportations. (J'ai au final fait un A* avec une heuristique basée sur une estimation du coût minimal du passage à un étage inférieur de 2 fois la distance de Manhattan la plus courte entre un téléporteur interne et externe).
+
+### Jour 21 :
+
+- Ne pas utiliser le registre J comme une mémoire supplémentaire en pensant à tort qu'un écriture sur J provoque une action.
