@@ -1687,7 +1687,7 @@ Partie 1 : trouver le plus court chemin dans un labyrinthe avec des téléporteu
 
 Partie 2 : trouver le plus court chemin dans un labyrinthe composé de plusieurs étages identiques.
 
-```
+```python
 from collections import deque
 from itertools import product
 
