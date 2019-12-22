@@ -1821,7 +1821,161 @@ Partie 1 : commander un robot à l'aide d'un interpréteur du jour 9 pour qu'il 
 
 Partie 2 : commander un robot à l'aide d'un interpréteur du jour 9 pour qu'il évite des trous avec des sauts de 4 et une vision de 8.
 
-## Jour 22
+```python
+from collections import deque
+
+
+class Code(list):
+    def __getitem__(self, key):
+        while key >= len(self):
+            self.append(0)
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, item):
+        while key >= len(self):
+            self.append(0)
+        super().__setitem__(key, item)
+
+
+class Machine:
+    def __init__(self, code):
+        self._inputs = deque([])
+        self._code = Code(code)
+        self._pointer = 0
+        self._base = 0
+
+    def parse_args(self, instr, n, ret=True):
+        pointer = self._pointer + 1
+        args = []
+        for i in range(n):
+            if instr % 10 == 1:
+                args.append(self._code[pointer + i])
+            elif instr % 10 == 2:
+                args.append(self._code[self._base + self._code[pointer + i]])
+            else:
+                args.append(self._code[self._code[pointer + i]])
+            instr //= 10
+        if ret:
+            if instr % 10 == 2:
+                args.append(self._base + self._code[pointer + n])
+            else:
+                args.append(self._code[pointer + n])
+
+        return args
+
+    def execute(self, data=None):
+        if data is not None:
+            self._inputs.extend(data)
+        instr = self._code[self._pointer]
+        opcode = instr % 100
+        while opcode != 99:
+            instr //= 100
+            if opcode == 1:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] + args[1]
+                self._pointer += 4
+            elif opcode == 2:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] * args[1]
+                self._pointer += 4
+            elif opcode == 3:
+                args = self.parse_args(instr, 0)
+                self._code[args[0]] = self._inputs.popleft()
+                self._pointer += 2
+            elif opcode == 4:
+                args = self.parse_args(instr, 1, False)
+                self._pointer += 2
+                return args[0]
+            elif opcode == 5:
+                args = self.parse_args(instr, 2, False)
+                if args[0] != 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 6:
+                args = self.parse_args(instr, 2, False)
+                if args[0] == 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 7:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] < args[1] else 0
+                self._pointer += 4
+            elif opcode == 8:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] == args[1] else 0
+                self._pointer += 4
+            elif opcode == 9:
+                args = self.parse_args(instr, 1, False)
+                self._base += args[0]
+                self._pointer += 2
+            else:
+                print("error")
+                return None
+            instr = self._code[self._pointer]
+            opcode = instr % 100
+        return None
+
+
+data = input().split(",")
+
+robot = Machine(list(map(int, data)))
+codes = [
+    "OR D J\n",
+    "OR A T\n",
+    "AND B T\n",
+    "AND C T\n",
+    "NOT T T\n",
+    "AND T J\n",
+    "WALK\n",
+]
+codes = (ord(c) for c in "".join(codes))
+
+string = ""
+output = robot.execute(codes)
+while output is not None:
+    if output == 10:
+        print(string)
+        string = ""
+    elif output > 127:
+        print(output)
+    else:
+        string += chr(output)
+    output = robot.execute()
+
+robot = Machine(list(map(int, data)))
+codes = [
+    "OR E J\n",
+    "OR H J\n",
+    "AND D J\n",
+    "OR A T\n",
+    "AND B T\n",
+    "AND C T\n",
+    "NOT T T\n",
+    "AND T J\n",
+    "RUN\n",
+]
+codes = (ord(c) for c in "".join(codes))
+
+string = ""
+output = robot.execute(codes)
+while output is not None:
+    if output == 10:
+        print(string)
+        string = ""
+    elif output > 127:
+        print(output)
+    else:
+        string += chr(output)
+    output = robot.execute()
+```
+
+## Jour 22 : Slam Shuffle
+
+Partie 1 : réaliser des opérations sur un tableau pour le mélanger.
+
+Partie 2 : simplifier le calcul des nouvelles positions des éléments du tableau afin d'appliquer le mélange un grand nombre de fois sur un grand tableau.
 
 ## Jour 23
 
@@ -1849,3 +2003,8 @@ Partie 2 : commander un robot à l'aide d'un interpréteur du jour 9 pour qu'il 
 ### Jour 21 :
 
 - Ne pas utiliser le registre J comme une mémoire supplémentaire en pensant à tort qu'un écriture sur J provoque une action.
+
+### Jour 22 :
+
+- Ne pas remarquer que les tailles des tableaux sont des nombres premiers, ce qui facilite l'inversion du modulo.
+- Chercher à calculer le modulo d'une suite géométrique avec `(1-pow(q, n, m))/(1-q)` au lieu de `(1-pow(q, n, m*(1-q)))/(1-q)`.
