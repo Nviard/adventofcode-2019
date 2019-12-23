@@ -1977,7 +1977,68 @@ Partie 1 : réaliser des opérations sur un tableau pour le mélanger.
 
 Partie 2 : simplifier le calcul des nouvelles positions des éléments du tableau afin d'appliquer le mélange un grand nombre de fois sur un grand tableau.
 
-## Jour 23
+```python
+import functools
+
+
+def r_new(lencards):
+    return (-1, lencards - 1)
+
+
+def r_cut(lencards, n):
+    return (1, n)
+
+
+def r_increment(lencards, n):
+    return (pow(n, lencards - 2, lencards), 0)
+
+
+def get_linear_coeffs(data, deck):
+    coeffs = []
+    for line in data:
+        if "cut" in line:
+            coeffs.append(r_cut(deck, int(line[-1])))
+        elif "new" in line:
+            coeffs.append(r_new(deck))
+        elif "increment" in line:
+            coeffs.append(r_increment(deck, int(line[-1])))
+
+    return functools.reduce(
+        lambda a, b: (a[0] * b[0] % deck, (a[0] * b[1] + a[1]) % deck), coeffs
+    )
+
+
+data = []
+try:
+    while True:
+        data.append(input().split())
+except EOFError:
+    pass
+
+
+deck = 10007
+coeffs = get_linear_coeffs(data, deck)
+for i in range(deck):
+    if (coeffs[0] * i + coeffs[1]) % deck == 2019:
+        print(i)
+        break
+
+deck = 119315717514047
+coeffs = get_linear_coeffs(data, deck)
+repeats = 101741582076661
+pos = 2020
+pos = (
+    (1 - pow(coeffs[0], repeats, deck * (1 - coeffs[0]))) // (1 - coeffs[0]) * coeffs[1]
+    + pow(coeffs[0], repeats, deck) * pos
+) % deck
+print(pos)
+```
+
+## Jour 23 : Category Six
+
+Partie 1 : faire communiquer des interpréteurs du jour 9.
+
+Partie 2 : faire communiquer des interpréteurs du jour 9 jusqu'à attendre plusieurs fois un état d'attente général.
 
 ## Jour 24
 
