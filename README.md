@@ -2040,7 +2040,151 @@ Partie 1 : faire communiquer des interpréteurs du jour 9.
 
 Partie 2 : faire communiquer des interpréteurs du jour 9 jusqu'à attendre plusieurs fois un état d'attente général.
 
-## Jour 24
+```python
+from collections import deque
+
+
+class Code(list):
+    def __getitem__(self, key):
+        while key >= len(self):
+            self.append(0)
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, item):
+        while key >= len(self):
+            self.append(0)
+        super().__setitem__(key, item)
+
+
+class Machine:
+    def __init__(self, code):
+        self._inputs = deque([])
+        self._code = Code(code)
+        self._pointer = 0
+        self._base = 0
+
+    def parse_args(self, instr, n, ret=True):
+        pointer = self._pointer + 1
+        args = []
+        for i in range(n):
+            if instr % 10 == 1:
+                args.append(self._code[pointer + i])
+            elif instr % 10 == 2:
+                args.append(self._code[self._base + self._code[pointer + i]])
+            else:
+                args.append(self._code[self._code[pointer + i]])
+            instr //= 10
+        if ret:
+            if instr % 10 == 2:
+                args.append(self._base + self._code[pointer + n])
+            else:
+                args.append(self._code[pointer + n])
+
+        return args
+
+    def execute(self, data=None):
+        if data is not None:
+            self._inputs.extend(data)
+        instr = self._code[self._pointer]
+        opcode = instr % 100
+        while opcode != 99:
+            instr //= 100
+            if opcode == 1:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] + args[1]
+                self._pointer += 4
+            elif opcode == 2:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] * args[1]
+                self._pointer += 4
+            elif opcode == 3:
+                args = self.parse_args(instr, 0)
+                self._code[args[0]] = self._inputs.popleft()
+                self._pointer += 2
+            elif opcode == 4:
+                args = self.parse_args(instr, 1, False)
+                self._pointer += 2
+                return args[0]
+            elif opcode == 5:
+                args = self.parse_args(instr, 2, False)
+                if args[0] != 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 6:
+                args = self.parse_args(instr, 2, False)
+                if args[0] == 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 7:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] < args[1] else 0
+                self._pointer += 4
+            elif opcode == 8:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] == args[1] else 0
+                self._pointer += 4
+            elif opcode == 9:
+                args = self.parse_args(instr, 1, False)
+                self._base += args[0]
+                self._pointer += 2
+            else:
+                print("error")
+                return None
+            instr = self._code[self._pointer]
+            opcode = instr % 100
+        return None
+
+
+data = input().split(",")
+
+robots = []
+
+for i in range(50):
+    robots.append(Machine(list(map(int, data))))
+
+next_inputs = [deque([i]) for i in range(50)]
+current_outputs = [deque() for i in range(50)]
+
+nat = None
+i = 0
+errors = 0
+last_Y = None
+while True:
+    try:
+        inputs = deque(next_inputs[i])
+        next_inputs[i].clear()
+        current_outputs[i].append(robots[i].execute(inputs))
+        errors = 0
+        if len(current_outputs[i]) == 3:
+            if current_outputs[i][0] == 255:
+                if nat is None:
+                    print(current_outputs[i][2])
+                current_outputs[i].popleft()
+                nat = deque(current_outputs[i])
+            next_inputs[current_outputs[i].popleft()].extend(current_outputs[i])
+            current_outputs[i].clear()
+    except IndexError:
+        next_inputs[i].append(-1)
+        errors += 1
+        if errors > 50:
+            if last_Y == nat[-1]:
+                print(last_Y)
+                break
+            last_Y = nat[-1]
+            next_inputs[0].clear()
+            next_inputs[0].extend(deque(nat))
+            i = -1
+    i += 1
+    i %= 50
+```
+
+## Jour 24 : Planet of Discord
+
+Partie 1 : faire évoluer un jeu de la vie jusqu'à ce qu'il se répète.
+
+Partie 2 : faire évoluer plusieurs jeux de la vie imbriqués.
 
 ## Comment perdre du temps :)
 
