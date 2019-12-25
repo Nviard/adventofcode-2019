@@ -2186,6 +2186,242 @@ Partie 1 : faire évoluer un jeu de la vie jusqu'à ce qu'il se répète.
 
 Partie 2 : faire évoluer plusieurs jeux de la vie imbriqués.
 
+```python
+from collections import deque
+
+data = []
+try:
+    while True:
+        data.append(tuple([x == "#" for x in input()]))
+except EOFError:
+    pass
+
+
+def get_neighbors(data, i, j, inside=None, outside=None):
+    if i > 0 and data[i - 1][j]:
+        yield 1
+    if i < 4 and data[i + 1][j]:
+        yield 1
+    if j > 0 and data[i][j - 1]:
+        yield 1
+    if j < 4 and data[i][j + 1]:
+        yield 1
+    if inside is not None and i == 1 and j == 2:
+        yield sum(inside[0]) - data[2][2]
+    if inside is not None and i == 3 and j == 2:
+        yield sum(inside[4]) - data[2][2]
+    if inside is not None and i == 2 and j == 1:
+        yield sum((l[0] for l in inside)) - data[2][2]
+    if inside is not None and i == 2 and j == 3:
+        yield sum((l[4] for l in inside)) - data[2][2]
+    if outside is not None and i == 0:
+        yield outside[1][2]
+    if outside is not None and i == 4:
+        yield outside[3][2]
+    if outside is not None and j == 0:
+        yield outside[2][1]
+    if outside is not None and j == 4:
+        yield outside[2][3]
+
+
+def new_tiles(tiles, inside=None, outside=None):
+    new = []
+    for i in range(5):
+        line = []
+        for j in range(5):
+            if tiles[i][j]:
+                line.append(sum(get_neighbors(tiles, i, j, inside, outside)) == 1)
+            else:
+                line.append(sum(get_neighbors(tiles, i, j, inside, outside)) in [1, 2])
+        new.append(tuple(line))
+    return tuple(new)
+
+
+tiles = tuple(data)
+
+visited = set()
+while tiles not in visited:
+    visited.add(tiles)
+    tiles = new_tiles(tiles)
+
+res = 0
+current = 1
+for i in range(5):
+    for j in range(5):
+        if tiles[i][j]:
+            res += current
+        current *= 2
+
+print(res)
+
+tiles = deque([tuple(data)])
+
+for i in range(200):
+    tiles.append(tuple([tuple([False] * 5)] * 5))
+    tiles.appendleft(tuple([tuple([False] * 5)] * 5))
+    new = deque()
+    for i, t in enumerate(tiles):
+        new.append(
+            new_tiles(
+                t,
+                tiles[i - 1] if i > 0 else None,
+                tiles[i + 1] if i < len(tiles) - 1 else None,
+            )
+        )
+    tiles = new
+
+print(sum((sum((sum(l) for l in t)) - t[2][2] for t in tiles)))
+```
+
+Jour 25 : Cryostasis
+
+Partie 1 : gagner à un jeu d'aventure textuel produit par un intérpréteur du jour 9.
+
+Partie 2 : cliquer sur un lien :).
+
+```python
+from collections import deque
+
+
+class Code(list):
+    def __getitem__(self, key):
+        while key >= len(self):
+            self.append(0)
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, item):
+        while key >= len(self):
+            self.append(0)
+        super().__setitem__(key, item)
+
+
+class Machine:
+    def __init__(self, code):
+        self._inputs = deque([])
+        self._code = Code(code)
+        self._pointer = 0
+        self._base = 0
+
+    def parse_args(self, instr, n, ret=True):
+        pointer = self._pointer + 1
+        args = []
+        for i in range(n):
+            if instr % 10 == 1:
+                args.append(self._code[pointer + i])
+            elif instr % 10 == 2:
+                args.append(self._code[self._base + self._code[pointer + i]])
+            else:
+                args.append(self._code[self._code[pointer + i]])
+            instr //= 10
+        if ret:
+            if instr % 10 == 2:
+                args.append(self._base + self._code[pointer + n])
+            else:
+                args.append(self._code[pointer + n])
+
+        return args
+
+    def execute(self, data=None):
+        if data is not None:
+            self._inputs.extend(data)
+        instr = self._code[self._pointer]
+        opcode = instr % 100
+        while opcode != 99:
+            instr //= 100
+            if opcode == 1:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] + args[1]
+                self._pointer += 4
+            elif opcode == 2:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = args[0] * args[1]
+                self._pointer += 4
+            elif opcode == 3:
+                args = self.parse_args(instr, 0)
+                self._code[args[0]] = self._inputs.popleft()
+                self._pointer += 2
+            elif opcode == 4:
+                args = self.parse_args(instr, 1, False)
+                self._pointer += 2
+                return args[0]
+            elif opcode == 5:
+                args = self.parse_args(instr, 2, False)
+                if args[0] != 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 6:
+                args = self.parse_args(instr, 2, False)
+                if args[0] == 0:
+                    self._pointer = args[1]
+                else:
+                    self._pointer += 3
+            elif opcode == 7:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] < args[1] else 0
+                self._pointer += 4
+            elif opcode == 8:
+                args = self.parse_args(instr, 2)
+                self._code[args[2]] = 1 if args[0] == args[1] else 0
+                self._pointer += 4
+            elif opcode == 9:
+                args = self.parse_args(instr, 1, False)
+                self._base += args[0]
+                self._pointer += 2
+            else:
+                print("error")
+                return None
+            instr = self._code[self._pointer]
+            opcode = instr % 100
+        return None
+
+
+data = input().split(",")
+
+robot = Machine(list(map(int, data)))
+codes = [
+    "west\n"
+    "west\n"
+    "north\n"
+    "take space heater\n"
+    "south\n"
+    "east\n"
+    "south\n"
+    "south\n"
+    "take sand\n"
+    "north\n"
+    "north\n"
+    "east\n"
+    "east\n"
+    "take mug\n"
+    "east\n"
+    "south\n"
+    "east\n"
+    "south\n"
+    "take easter egg\n"
+    "north\n"
+    "west\n"
+    "west\n"
+    "south\n"
+    "west\n"
+    "south\n"
+    "south\n"
+]
+codes = (ord(c) for c in "".join(codes))
+
+string = ""
+output = robot.execute(codes)
+while output is not None:
+    if output == 10:
+        print(string)
+        string = ""
+    elif output > 127:
+        print(output)
+    else:
+        string += chr(output)
+    output = robot.execute()
+```
+
 ## Comment perdre du temps :)
 
 ### Jour 16 :
